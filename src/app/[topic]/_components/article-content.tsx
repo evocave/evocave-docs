@@ -2,83 +2,74 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useLang } from '@/context/languageContext'
-import { triggerTranslation } from '../_actions/docs.actions'
+import { triggerTranslation, getDocPageClient } from '../_actions/docs.actions'
+import { addHeadingIds, sanitizeContent } from '@/lib/docs-content'
+import { DocPage } from '@/types/docs'
+import ViewCount from './view-count'
 
 type Props = {
-  nodeId: string
-  content: string
-  className?: string
+  page: DocPage
+  processedContent: string
+  topicSlug: string
+  slugPath: string
+  readingTime: string
+  formattedDate: string
 }
 
-export default function ArticleTranslator({ nodeId, content, className }: Props) {
+export default function ArticleContent({
+  page,
+  processedContent,
+  topicSlug,
+  slugPath,
+  readingTime,
+  formattedDate,
+}: Props) {
   const { lang } = useLang()
-  const [displayed, setDisplayed] = useState(content)
+
+  const [title, setTitle] = useState(page.title)
+  const [description, setDescription] = useState(page.description)
+  const [content, setContent] = useState(processedContent)
   const [loading, setLoading] = useState(false)
+
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // ─── Fetch translated content saat lang berubah ───────────────────────────
   useEffect(() => {
     if (lang === 'en') {
-      setDisplayed(content)
+      setTitle(page.title)
+      setDescription(page.description)
+      setContent(processedContent)
       return
     }
 
     setLoading(true)
-    triggerTranslation(nodeId, lang)
+
+    triggerTranslation(page.id, lang)
+      .then(() => getDocPageClient(topicSlug, slugPath, lang))
       .then(result => {
-        if (!result.error) {
-          // Translation sudah di-generate di API — reload konten dengan locale
-          // Konten translated akan di-fetch ulang di page level via getDocPage
-          // Di sini kita hanya trigger generate, lalu force re-render
-          window.location.reload()
+        if (!result.error && result.data) {
+          const translated = result.data
+          setTitle(translated.title)
+          setDescription(translated.description)
+          const processed = addHeadingIds(sanitizeContent(translated.content ?? ''))
+          setContent(processed)
         }
       })
       .catch(() => null)
       .finally(() => setLoading(false))
-  }, [lang, nodeId, content])
+  }, [lang, page.id, page.title, page.description, processedContent, topicSlug, slugPath])
 
-  // Prism.js syntax highlighting + copy button
+  // ─── Highlight.js syntax highlighting + copy button ──────────────────────
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    const loadPrism = async () => {
-      if (!(window as Window & { Prism?: unknown }).Prism) {
-        await new Promise<void>(resolve => {
-          const script = document.createElement('script')
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js'
-          script.onload = () => resolve()
-          document.head.appendChild(script)
-        })
-        await new Promise<void>(resolve => {
-          const script = document.createElement('script')
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js'
-          script.onload = () => resolve()
-          document.head.appendChild(script)
-        })
-      }
+    const loadHljs = async () => {
+      const hljs = (await import('highlight.js')).default
 
-      const w = window as Window & {
-        Prism?: { highlightAllUnder: (el: Element) => void }
-      }
-
-      container.querySelectorAll('pre code:not([class*="language-"])').forEach(el => {
-        const text = el.textContent ?? ''
-        if (text.includes('<?php')) {
-          el.className = 'language-php'
-        } else if (text.includes('<html') || text.includes('</div>') || text.includes('<!DOCTYPE')) {
-          el.className = 'language-html'
-        } else if (text.includes('SELECT ') || text.includes('INSERT ') || text.includes('FROM ')) {
-          el.className = 'language-sql'
-        } else if (text.includes(': ') && text.includes('\n') && !text.includes('{')) {
-          el.className = 'language-yaml'
-        } else if (text.includes('$ ') || text.includes('npm ') || text.includes('git ')) {
-          el.className = 'language-bash'
-        } else {
-          el.className = 'language-javascript'
-        }
+      container.querySelectorAll('pre code').forEach(el => {
+        hljs.highlightElement(el as HTMLElement)
       })
-
-      if (w.Prism) w.Prism.highlightAllUnder(container)
 
       container.querySelectorAll('pre').forEach(pre => {
         if (pre.querySelector('.copy-btn')) return
@@ -117,15 +108,30 @@ export default function ArticleTranslator({ nodeId, content, className }: Props)
       })
     }
 
-    loadPrism()
-  }, [displayed])
+    loadHljs()
+  }, [content])
 
   return (
-    <div
-      ref={containerRef}
-      className={className}
-      style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}
-      dangerouslySetInnerHTML={{ __html: displayed }}
-    />
+    <div style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="mt-2 mb-3 text-2xl font-bold lg:text-4xl">{title}</h1>
+          <p className="text-muted-foreground mb-5 flex items-center gap-1.5 text-sm">
+            <span>{readingTime}</span>
+            <span>·</span>
+            <ViewCount nodeId={page.id} initialViews={page.meta.views} />
+            <span>·</span>
+            <span>Updated on {formattedDate}</span>
+          </p>
+        </div>
+        {description && <p className="text-foreground/90 mb-5 text-base">{description}</p>}
+      </div>
+      <hr className="border-border mt-5 pb-5" />
+      <div
+        ref={containerRef}
+        className="tiptap prose prose-neutral dark:prose-invert max-w-none"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    </div>
   )
 }

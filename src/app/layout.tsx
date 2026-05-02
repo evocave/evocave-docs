@@ -7,6 +7,8 @@ import ReadingProgress from '@/components/reading-progress'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 import GoogleAnalytics from '@/components/google-analytics'
+import SearchModal from '@/components/search-modal'
+import BubbleChat from '@/components/bubble-chat'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -42,6 +44,8 @@ export default function RootLayout({
           <LanguageProvider>
             <ReadingProgress />
             <Header />
+            <SearchModal />
+            <BubbleChat />
             {children}
             <Footer />
           </LanguageProvider>
