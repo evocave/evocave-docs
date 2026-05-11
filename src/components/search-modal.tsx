@@ -121,7 +121,7 @@ export default function SearchModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-xl gap-0 overflow-hidden p-0">
+      <DialogContent className="max-w-md gap-0 overflow-hidden p-0 lg:max-w-xl">
         <VisuallyHidden.Root>
           <DialogTitle>Search Documentation</DialogTitle>
         </VisuallyHidden.Root>

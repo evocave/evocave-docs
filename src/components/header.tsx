@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import AppLogo from './app-logo'
+import HamburgerMobile from './hamburger-anim'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -101,7 +102,7 @@ export default function Header() {
             {/* Search icon — mobile */}
             <button
               onClick={() => document.dispatchEvent(new CustomEvent('open-docs-search'))}
-              className="text-muted-foreground hover:text-foreground border-border flex size-8 items-center justify-center rounded-md border transition-colors lg:hidden"
+              className="text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded-md transition-colors lg:hidden"
               aria-label="Search"
             >
               <svg
@@ -120,22 +121,7 @@ export default function Header() {
             </button>
 
             {/* Hamburger — mobile */}
-            <button
-              className="text-foreground border-border flex size-8 items-center justify-center rounded-md border transition-colors lg:hidden"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle menu"
-              aria-expanded={isOpen}
-            >
-              {isOpen ? (
-                <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
-                  <path d="M6 6L26 26M26 6L6 26" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
-                  <path d="M4 11H28M4 21H28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-              )}
-            </button>
+            <HamburgerMobile isOpen={isOpen} setIsOpen={setIsOpen} />
           </div>
         </nav>
       </header>
@@ -156,7 +142,7 @@ export default function Header() {
                   target={link.external ? '_blank' : undefined}
                   rel={link.external ? 'noopener noreferrer' : undefined}
                   className={cn(
-                    'border-border border-b py-3 text-sm transition-colors last:border-0',
+                    'hover:text-foreground py-3 text-sm transition-colors',
                     isActive ? 'text-foreground font-medium' : 'text-muted-foreground',
                   )}
                 >
