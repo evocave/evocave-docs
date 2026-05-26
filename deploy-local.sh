@@ -14,30 +14,32 @@ step_done() {
 }
 section() { echo -e "\n${CYAN}${BOLD}▶ $1${RESET}"; }
 fail() { echo -e "\n${RED}✗ Error: $1${RESET}"; exit 1; }
+
 echo -e "${BOLD}╔══════════════════════════╗${RESET}"
 echo -e "${BOLD}║   Evocave Docs — Deploy  ║${RESET}"
 echo -e "${BOLD}╚══════════════════════════╝${RESET}"
 echo -e "  ${YELLOW}$(date '+%Y-%m-%d %H:%M:%S')${RESET}"
+
 section "1/3  Building locally"
 step_start
 [ -f .env.local ] && mv .env.local .env.local.bak
 npm run build || { [ -f .env.local.bak ] && mv .env.local.bak .env.local; fail "Build failed"; }
 [ -f .env.local.bak ] && mv .env.local.bak .env.local
 step_done
-section "2/3  Uploading .next to server"
+
+section "2/3  Uploading .next to server (rsync)"
 step_start
-tar -czf .next.tar.gz .next
-scp -P 9393 .next.tar.gz evocavec@evocave.com:~/repositories/evocave-docs/
-ssh -p 9393 evocavec@evocave.com "cd ~/repositories/evocave-docs && tar -xzf .next.tar.gz && rm .next.tar.gz"
-rm .next.tar.gz
+rsync -avz --delete -e "ssh -p 9393" .next/ evocavec@evocave.com:~/repositories/evocave-docs/.next/
 step_done
+
 section "3/3  Restarting server"
 step_start
 ssh -p 9393 evocavec@evocave.com "bash ~/repositories/evocave-docs/deploy-server.sh"
 step_done
+
 TOTAL=$(( $(date +%s) - DEPLOY_START ))
 SUMMARY="  Deploy selesai dalam ${TOTAL}s  "
 BAR=$(printf '═%.0s' $(seq 1 ${#SUMMARY}))
-echo -e "\n${GREEN}${BOLD}╔${BAR}╗${RESET}"
+echo -e "\n${GREEN}${BOLD}╔${BAR}╝${RESET}"
 echo -e "${GREEN}${BOLD}║${SUMMARY}║${RESET}"
 echo -e "${GREEN}${BOLD}╚${BAR}╝${RESET}\n"
