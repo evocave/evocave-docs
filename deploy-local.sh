@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH="/usr/bin:/usr/local/bin:$PATH"
 set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -40,6 +41,6 @@ step_done
 TOTAL=$(( $(date +%s) - DEPLOY_START ))
 SUMMARY="  Deploy selesai dalam ${TOTAL}s  "
 BAR=$(printf '═%.0s' $(seq 1 ${#SUMMARY}))
-echo -e "\n${GREEN}${BOLD}╔${BAR}╝${RESET}"
+echo -e "\n${GREEN}${BOLD}╔${BAR}╗${RESET}"
 echo -e "${GREEN}${BOLD}║${SUMMARY}║${RESET}"
 echo -e "${GREEN}${BOLD}╚${BAR}╝${RESET}\n"
