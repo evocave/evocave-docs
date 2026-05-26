@@ -24,13 +24,17 @@ echo -e "  ${YELLOW}$(date '+%Y-%m-%d %H:%M:%S')${RESET}"
 section "1/3  Building locally"
 step_start
 [ -f .env.local ] && mv .env.local .env.local.bak
-npm run build || { [ -f .env.local.bak ] && mv .env.local.bak .env.local; fail "Build failed"; }
+npm run build 2>&1
 [ -f .env.local.bak ] && mv .env.local.bak .env.local
+[ ! -d .next ] && fail "Build failed — .next directory not found"
 step_done
 
-section "2/3  Uploading .next to server (rsync)"
+section "2/3  Uploading .next to server"
 step_start
-rsync -avz --delete -e "ssh -p 9393" .next/ evocavec@evocave.com:~/repositories/evocave-docs/.next/
+tar -czf /tmp/evocave-docs-next.tar.gz .next
+scp -P 9393 /tmp/evocave-docs-next.tar.gz evocavec@evocave.com:~/
+ssh -p 9393 evocavec@evocave.com "cd ~/repositories/evocave-docs && tar -xzf ~/evocave-docs-next.tar.gz && rm ~/evocave-docs-next.tar.gz"
+rm /tmp/evocave-docs-next.tar.gz
 step_done
 
 section "3/3  Restarting server"
