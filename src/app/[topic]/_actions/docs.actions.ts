@@ -16,7 +16,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export async function getTopics() {
   return apiFetch<DocTopic[]>(`${API_URL}/docs/topics`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 3600, tags: ['docs'] },
   })
 }
 
@@ -24,7 +24,7 @@ export async function getTopics() {
 
 export async function getDocTree(topicSlug: string) {
   return apiFetch<DocTree>(`${API_URL}/docs/nodes/${topicSlug}`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 3600, tags: ['docs'] },
   })
 }
 
@@ -35,7 +35,7 @@ export async function getDocPage(topicSlug: string, slugPath: string, locale?: s
   if (locale && locale !== 'en') url.searchParams.set('locale', locale)
 
   return apiFetch<DocPage>(url.toString(), {
-    next: { revalidate: 3600 },
+    next: { revalidate: 3600, tags: ['docs'] },
   })
 }
 
