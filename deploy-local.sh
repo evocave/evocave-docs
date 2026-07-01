@@ -32,15 +32,15 @@ step_done
 section "2/3  Uploading to server"
 step_start
 tar -czf /tmp/evocave-docs-next.tar.gz .next
-scp -P 9393 /tmp/evocave-docs-next.tar.gz evocavec@evocave.com:~/
-scp -P 9393 .env.production evocavec@evocave.com:~/repositories/evocave-docs/.env.production
-ssh -p 9393 evocavec@evocave.com "cd ~/repositories/evocave-docs && tar -xzf ~/evocave-docs-next.tar.gz && rm ~/evocave-docs-next.tar.gz"
+scp /tmp/evocave-docs-next.tar.gz evocave:~/
+scp .env.production evocave:~/repositories/evocave-docs/.env.production
+ssh evocave "cd ~/repositories/evocave-docs && tar -xzf ~/evocave-docs-next.tar.gz && rm ~/evocave-docs-next.tar.gz"
 rm /tmp/evocave-docs-next.tar.gz
 step_done
 
 section "3/3  Restarting server"
 step_start
-ssh -p 9393 evocavec@evocave.com "bash ~/repositories/evocave-docs/deploy-server.sh"
+ssh evocave "bash ~/repositories/evocave-docs/deploy-server.sh"
 step_done
 
 TOTAL=$(( $(date +%s) - DEPLOY_START ))
